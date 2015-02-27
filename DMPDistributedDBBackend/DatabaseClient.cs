@@ -12,10 +12,12 @@ namespace DMPDistributedDBBackend
         private bool connected;
         private NetworkClient<object> networkClient;
         private DatabaseDriver databaseDriver;
+        private IPEndPoint currentEndpoint;
 
         public DatabaseClient(TcpClient connectedConnection, DatabaseDriver databaseDriver)
         {
             connected = true;
+            currentEndpoint = (IPEndPoint)connectedConnection.Client.RemoteEndPoint;
             this.databaseDriver = databaseDriver;
             NetworkHandler<object> networkHandler = new NetworkHandler<object>();
             networkHandler.SetHeartbeatCallback(HandleSendHeartbeat, 5000, 20000);
@@ -93,6 +95,16 @@ namespace DMPDistributedDBBackend
             {
                 Thread.Sleep(1000);
             }
+        }
+
+        public void Disconnect()
+        {
+            networkClient.Disconnect();
+        }
+
+        public void DisplayEndpoint()
+        {
+            Console.WriteLine("Currently connected to endpoint at " + currentEndpoint);
         }
 
         private enum MessageType

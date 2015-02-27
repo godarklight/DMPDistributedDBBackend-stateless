@@ -10,6 +10,7 @@ namespace DMPDistributedDBBackend
         private DatabaseConnection databaseConnection;
         private int freeID = 0;
         private Dictionary<ReferenceID, int> trackID = new Dictionary<ReferenceID, int>();
+        private Dictionary<ReferenceID, ReportingMessage> connectedClients = new Dictionary<ReferenceID, ReportingMessage>();
 
 
         public DatabaseDriver(DatabaseConnection databaseConnection)
@@ -24,6 +25,10 @@ namespace DMPDistributedDBBackend
             ReferenceID thisReference = new ReferenceID(serverID, clientID);
             trackID.Add(thisReference, Interlocked.Increment(ref freeID));
             int trackNumber = trackID[thisReference];
+            lock (connectedClients)
+            {
+                connectedClients.Add(thisReference, null);
+            }
             SQLConnect(trackNumber, remoteAddress);
         }
 
@@ -31,6 +36,10 @@ namespace DMPDistributedDBBackend
         {
             ReferenceID thisReference = new ReferenceID(serverID, clientID);
             int trackNumber = trackID[thisReference];
+            lock (connectedClients)
+            {
+                connectedClients[thisReference] = reportMessage;
+            }
             SQLReport(trackNumber, reportMessage);
         }
 
@@ -38,6 +47,13 @@ namespace DMPDistributedDBBackend
         {
             ReferenceID thisReference = new ReferenceID(serverID, clientID);
             int trackNumber = trackID[thisReference];
+            lock (connectedClients)
+            {
+                if (connectedClients.ContainsKey(thisReference))
+                {
+                    connectedClients.Remove(thisReference);
+                }
+            }
             SQLDisconnect(trackNumber);
             trackID.Remove(thisReference);
         }
@@ -118,6 +134,24 @@ namespace DMPDistributedDBBackend
             catch (Exception e)
             {
                 Console.WriteLine("WARNING: Ignoring error on cleanup, error: " + e.Message);
+            }
+        }
+
+        public void PrintServers()
+        {
+            lock (connectedClients)
+            {
+                foreach (KeyValuePair<ReferenceID, ReportingMessage> kvp in connectedClients)
+                {
+                    if (kvp.Value == null)
+                    {
+                        Console.WriteLine("@" + kvp.Key.serverID + ":" + kvp.Key.clientID + ": CONNECTING");
+                    }
+                    else
+                    {
+                        Console.WriteLine("@" + kvp.Key.serverID + ":" + kvp.Key.clientID + " " + kvp.Value.gameAddress + ", " + kvp.Value.gamePort + ", " + kvp.Value.players.Length + " players.");
+                    }
+                }
             }
         }
 
