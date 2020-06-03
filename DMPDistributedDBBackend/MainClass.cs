@@ -21,72 +21,56 @@ namespace DMPDistributedDBBackend
             InteractiveConsole();
         }
 
-        /* TODO: Divert all Console.WriteLine calls.
-        private static void DetectConsole()
-        {
-            bool consoleOK = true;
-            try
-            {
-                Console.WriteLine();
-            }
-            catch
-            {
-                consoleOK = false;
-            }
-            if (consoleOK)
-            {
-                InteractiveConsole();
-            }
-            else
-            {
-                NoConsole();
-            }
-        }
-        */
-
         private static void InteractiveConsole()
         {
             bool running = true;
             while (running)
             {
-                string line = Console.ReadLine().ToLower();
-                bool handled = false;
-                if (line == "q")
+                try
                 {
-                    handled = true;
-                    running = false;
-                    mainThread.Abort();
-                }
-                if (line == "p")
-                {
-                    handled = true;
-                    DatabaseDriver thisDriver = databaseDriver;
-                    if (thisDriver != null)
+                    string line = Console.ReadLine().ToLower();
+                    bool handled = false;
+                    if (line == "q")
                     {
-                        thisDriver.PrintServers();
+                        handled = true;
+                        running = false;
+                        mainThread.Abort();
+                    }
+                    if (line == "p")
+                    {
+                        handled = true;
+                        DatabaseDriver thisDriver = databaseDriver;
+                        if (thisDriver != null)
+                        {
+                            thisDriver.PrintServers();
+                        }
+                    }
+                    if (line == "r")
+                    {
+                        handled = true;
+                        DatabaseClient thisClient = databaseClient;
+                        if (thisClient != null)
+                        {
+                            thisClient.Disconnect();
+                        }
+                    }
+                    if (line == "d")
+                    {
+                        handled = true;
+                        string displayEndpoint = currentEndpoint;
+                        if (displayEndpoint != null)
+                        {
+                            Console.WriteLine("Currently connected to " + displayEndpoint);
+                        }
+                    }
+                    if (!handled)
+                    {
+                        Console.WriteLine("Commands: q for quit, p for print server/relay tree, r for reconnect to the network, d to display the current remote endpoint");
                     }
                 }
-                if (line == "r")
+                catch
                 {
-                    handled = true;
-                    DatabaseClient thisClient = databaseClient;
-                    if (thisClient != null)
-                    {
-                        thisClient.Disconnect();
-                    }
-                }
-                if (line == "d")
-                {
-                    handled = true;
-                    string displayEndpoint = currentEndpoint;
-                    if (displayEndpoint != null)
-                    {
-                        Console.WriteLine("Currently connected to " + displayEndpoint);
-                    }
-                }
-                if (!handled)
-                {
-                    Console.WriteLine("Commands: q for quit, p for print server/relay tree, r for reconnect to the network, d to display the current remote endpoint");
+                    NoConsole();
                 }
             }
         }
@@ -185,7 +169,7 @@ namespace DMPDistributedDBBackend
             {
                 ipPart = ipPart.Substring(1, ipPart.Length - 2);
             }
-            IPAddress ipAddr= null;
+            IPAddress ipAddr = null;
             if (IPAddress.TryParse(ipPart, out ipAddr))
             {
                 IPEndPoint[] retVal = new IPEndPoint[1];
