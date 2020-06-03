@@ -3,5 +3,8 @@
 *.userprefs
 DMPDistributedDBBackend/bin/*
 DMPDistributedDBBackend/obj/*
+DMPDistributedDBBackend/settings.xml
 *.suo
 *.csproj.user
+build/
+build.zip
